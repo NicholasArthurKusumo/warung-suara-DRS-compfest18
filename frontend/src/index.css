@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-warung-bg: #F3ECDD;
+  --color-warung-card: #FFFFFF;
+  --color-warung-border: #E8DFCC;
+  --color-warung-text: #3A322C;
+  --color-warung-muted: #8A7F6E;
+  --color-warung-faint: #B0A48F;
+  --color-warung-accent: #D6572B;
+  --color-warung-accentDark: #B23A24;
+  --color-warung-dangerBg: #FBE6E1;
+  --color-warung-dangerText: #B23A24;
+  --color-warung-warningBg: #FBF0DA;
+  --color-warung-warningText: #8A5B0B;
+  --color-warung-avatarBg: #F0DDC4;
+  --color-warung-avatarText: #8A4E1D;
+  --color-warung-successText: #3B6D11;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
