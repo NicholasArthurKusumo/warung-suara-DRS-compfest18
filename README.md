@@ -70,6 +70,7 @@ warung-suara/
 │   ├── extractor.py
 │   ├── batchTest.py
 │   ├── generateDataset.ipynb
+│   ├── Whisper.ipynb
 │   ├── requirements.txt
 │   └── Dockerfile
 └── frontend/                 # React voice-recording UI
@@ -179,7 +180,23 @@ Model STT (`IcedB/warung-suara-whisper-id`) di-*fine-tune* dari base model `cahy
 - **WER (Word Error Rate) pada eval set:** 16.15%
 - **Akurasi ekstraksi (batch test 50 sampel):** 100% pada seluruh field (item/qty/unit/aksi)
 
-> Model dan dataset besar **tidak** disertakan dalam repo ini (melebihi batas GitHub 100MB). Model dimuat otomatis dari Hugging Face Hub saat `ml-service` pertama kali dijalankan. Dataset dapat digenerate ulang lewat `ml-service/generateDataset.ipynb`.
+> Model dan dataset besar **tidak** disertakan dalam repo ini (melebihi batas GitHub 100MB). Model dimuat otomatis dari Hugging Face Hub saat `ml-service` pertama kali dijalankan.
+
+### Reproduksi Dataset & Training
+
+| Notebook | Fungsi |
+|---|---|
+| `ml-service/generateDataset.ipynb` | Generate dataset sintetik (TTS + augmentasi speed/noise) |
+| `ml-service/Whisper.ipynb` | Fine-tuning Whisper (`cahya/whisper-small-id` → model final), lalu upload ke Hugging Face Hub |
+
+Kedua notebook dijalankan di **Google Colab** (memanfaatkan GPU gratis untuk mempercepat training). Untuk menjalankan ulang:
+
+1. Buka notebook di Google Colab (atau Jupyter lokal jika tersedia GPU)
+2. Jalankan `generateDataset.ipynb` terlebih dahulu untuk membuat dataset sintetik (`manifest_clean.jsonl` + folder `audio/`)
+3. Jalankan `Whisper.ipynb` untuk melakukan fine-tuning menggunakan dataset tersebut
+4. Model hasil training di-push ke Hugging Face Hub agar dapat dimuat otomatis oleh `ml-service/main.py` saat runtime
+
+**Catatan training:** Training awalnya direncanakan 8 epoch, namun dihentikan lebih awal di epoch 2 karena training loss sudah mendekati nol sejak awal (indikasi overfitting terhadap pola template kalimat sintetik).
 
 ---
 
