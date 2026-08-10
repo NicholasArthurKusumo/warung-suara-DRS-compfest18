@@ -1,7 +1,7 @@
 /**
  * stockStore.js
  * In-memory stock state management for Warung Suara.
- * Nggak pakai database sesuai batasan MVP rulebook — state hidup di
+ * Nggak pakai database sesuai batasan MVP rulebook, state hidup di
  * memory dan reset kalau server restart (kecuali dipanggil manual via /stock/reset).
  */
 

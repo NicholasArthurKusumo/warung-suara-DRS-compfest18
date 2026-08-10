@@ -89,7 +89,7 @@ app.post("/voice-transaction", upload.single("audio"), async (req, res) => {
 
 /**
  * POST /voice-transaction/manual
- * Bypass Whisper/FastAPI — terima field hasil ekstraksi langsung sebagai JSON.
+ * Bypass Whisper/FastAPI, terima field hasil ekstraksi langsung sebagai JSON.
  * Body: { item, qty, unit, action }
  */
 app.post("/voice-transaction/manual", (req, res) => {
