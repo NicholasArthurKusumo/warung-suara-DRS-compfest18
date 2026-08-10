@@ -1,0 +1,34 @@
+# Node
+node_modules/
+npm-debug.log
+package-lock.json.bak
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Model & dataset (terlalu besar untuk GitHub, model di-load dari HF Hub)
+ml-service/model_final*.zip
+ml-service/dataset_warung_suara/
+*.zip
+
+# Environment
+.env
+.env.local
+
+# Build output
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Docker volumes (kalau ada bind mount lokal)
+mnt/

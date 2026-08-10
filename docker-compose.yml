@@ -1,0 +1,26 @@
+services:
+  ml-service:
+    build: ./ml-service
+    container_name: warung-suara-ml-service
+    ports:
+      - "8000:8000"
+    volumes:
+      # Cache model HF Hub biar nggak re-download tiap kali container di-restart
+      - hf_cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: warung-suara-backend
+    ports:
+      - "3000:3000"
+    environment:
+      # Nama service "ml-service" dipakai sebagai hostname di dalam Docker network,
+      # bukan localhost, karena tiap service jalan di container terpisah.
+      - FASTAPI_URL=http://ml-service:8000
+    depends_on:
+      - ml-service
+    restart: unless-stopped
+
+volumes:
+  hf_cache:
