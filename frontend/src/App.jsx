@@ -288,6 +288,58 @@ export default function App() {
     }
   }
 
+  const renderBottomBar = (isMobileLayout) => (
+    <div className={isMobileLayout ? 
+      "fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-2xl p-4 pb-6 border-t border-white/60 shadow-[0_-20px_40px_rgba(0,0,0,0.05)] rounded-t-[32px] block lg:hidden" : 
+      "absolute bottom-6 left-6 right-6 hidden lg:block"
+    }>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 bg-white/60 backdrop-blur-md border border-white p-2 pl-6 pr-2 rounded-[28px] shadow-sm flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-400">
+            {status}
+          </span>
+          
+          <button
+            onClick={handleMicClick}
+            className={`w-12 h-12 rounded-[20px] flex items-center justify-center interactive shadow-md transition-colors ${
+              recording ? 'bg-red-400 text-white animate-pulse' : 'bg-[#B4F090] text-[#1E1E1E]'
+            }`}
+          >
+            {recording ? (
+               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                 <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                 <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+               </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </div>
+      
+      {/* Quick Actions below input */}
+      <div className="flex justify-between items-end mt-4 px-2">
+         <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Saran Aksi</span>
+         <button onClick={() => setShowPromptSettings(true)} className="text-gray-400 hover:text-gray-700 interactive p-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+         </button>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mt-2">
+         {customPrompts.slice(0, 3).map((p, i) => (
+           <div key={i} onClick={() => sendManualTransaction(p.item, p.qty, p.unit, p.action)} className="bg-white/50 backdrop-blur border border-white p-3 rounded-2xl flex flex-col justify-between h-20 interactive cursor-pointer hover:bg-white/70">
+             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={p.icon || "M13 10V3L4 14h7v7l9-11h-7z"}/></svg>
+             <span className="text-[11px] font-semibold text-gray-700 leading-tight">{p.t}</span>
+           </div>
+         ))}
+      </div>
+    </div>
+  );
+
   const today = new Date().setHours(0,0,0,0);
   const todayTrx = transactions.filter(t => new Date(t.timestamp).setHours(0,0,0,0) === today);
   const totalTrxToday = todayTrx.length;
@@ -627,56 +679,14 @@ export default function App() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Bottom Floating Input Bar */}
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-white/60 backdrop-blur-md border border-white p-2 pl-6 pr-2 rounded-[28px] shadow-sm flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-400">
-                  {status}
-                </span>
-                
-                <button
-                  onClick={handleMicClick}
-                  className={`w-12 h-12 rounded-[20px] flex items-center justify-center interactive shadow-md transition-colors ${
-                    recording ? 'bg-red-400 text-white animate-pulse' : 'bg-[#B4F090] text-[#1E1E1E]'
-                  }`}
-                >
-                  {recording ? (
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                       <rect x="6" y="4" width="4" height="16" rx="1"></rect>
-                       <rect x="14" y="4" width="4" height="16" rx="1"></rect>
-                     </svg>
-                  ) : (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                      <line x1="12" y1="19" x2="12" y2="23" />
-                      <line x1="8" y1="23" x2="16" y2="23" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-            
-            {/* Quick Actions below input */}
-            <div className="flex justify-between items-end mt-4 px-2">
-               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Saran Aksi</span>
-               <button onClick={() => setShowPromptSettings(true)} className="text-gray-400 hover:text-gray-700 interactive p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-               </button>
-            </div>
-            <div className="grid grid-cols-3 gap-3 mt-2">
-               {customPrompts.slice(0, 3).map((p, i) => (
-                 <div key={i} onClick={() => sendManualTransaction(p.item, p.qty, p.unit, p.action)} className="bg-white/50 backdrop-blur border border-white p-3 rounded-2xl flex flex-col justify-between h-20 interactive cursor-pointer hover:bg-white/70">
-                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={p.icon || "M13 10V3L4 14h7v7l9-11h-7z"}/></svg>
-                   <span className="text-[11px] font-semibold text-gray-700 leading-tight">{p.t}</span>
-                 </div>
-               ))}
-            </div>
-          </div>
+          {/* Bottom Floating Input Bar (Desktop View) */}
+          {renderBottomBar(false)}
         </div>
 
       </div>
+      
+      {/* Fixed Bottom Input Bar (Mobile View) */}
+      {renderBottomBar(true)}
     </div>
   );
 }
