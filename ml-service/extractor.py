@@ -129,6 +129,13 @@ def _fuzzy_best_match(token: str, candidates, threshold: float = FUZZY_THRESHOLD
             best_score, best_candidate = score, cand
     if best_score >= threshold:
         return best_candidate, best_score
+        
+    # FALLBACK: Substring Match (untuk mengatasi user yang menyingkat barang kustom)
+    # Contoh: token "odol" dicari di dalam candidate "odol pepsodent"
+    for cand in candidates:
+        if len(token) > 2 and (token in cand or cand in token):
+            return cand, 0.70 # Beri skor sebagai partial match
+            
     return None, best_score
 
 
@@ -136,22 +143,22 @@ def _fuzzy_best_match(token: str, candidates, threshold: float = FUZZY_THRESHOLD
 # TAHAP-TAHAP EKSTRAKSI
 # =============================================================================
 
-def _extract_item(text: str):
+def _extract_item(text: str, item_names_sorted, item_unit_map):
     """Coba exact match dulu (multi-kata, terpanjang duluan), lalu fuzzy per token/window."""
-    for name in ITEM_NAMES_SORTED:
+    for name in item_names_sorted:
         if re.search(rf"\b{re.escape(name)}\b", text):
             canonical = ITEM_CANONICAL.get(name, name)
-            return canonical, ITEM_UNIT_MAP[name], "rule_based"
+            return canonical, item_unit_map[name], "rule_based"
 
     # fuzzy fallback: coba tiap token tunggal & bigram terhadap daftar nama item
     tokens = text.split()
     windows = list(tokens)
     windows += [f"{tokens[i]} {tokens[i+1]}" for i in range(len(tokens) - 1)]
     for window in windows:
-        match, score = _fuzzy_best_match(window, ITEM_NAMES_SORTED)
+        match, score = _fuzzy_best_match(window, item_names_sorted)
         if match:
             canonical = ITEM_CANONICAL.get(match, match)
-            return canonical, ITEM_UNIT_MAP[match], "fuzzy_fallback"
+            return canonical, item_unit_map[match], "fuzzy_fallback"
 
     return None, None, "failed"
 
@@ -189,21 +196,24 @@ def _extract_action(text: str):
 # ENTRY POINT
 # =============================================================================
 
-def extract(raw_text: str) -> dict:
+def extract(raw_text: str, custom_items: list = None) -> dict:
     """
     Ekstrak entri terstruktur dari teks transkripsi Whisper.
-
-    method final = "rule_based" kalau SEMUA field ketemu lewat rule-based,
-                  = "fuzzy_fallback" kalau minimal satu field butuh fuzzy,
-                  = "failed" kalau item ATAU qty tidak ketemu sama sekali
-                    (action ikut aturan sendiri, tapi item+qty adalah
-                    minimum yang dibutuhkan supaya entri berguna untuk
-                    update stok).
+    Menerima custom_items list dari database (berisi dict {name, unit}).
     """
     text = raw_text.strip().lower()
     text = re.sub(r"\s+", " ", text)
 
-    item, unit, item_method = _extract_item(text)
+    current_item_unit_map = ITEM_UNIT_MAP.copy()
+    if custom_items:
+        for ci in custom_items:
+            name = ci.get("name", "").strip().lower()
+            if name:
+                current_item_unit_map[name] = ci.get("unit", "pcs")
+    
+    current_item_names_sorted = sorted(current_item_unit_map.keys(), key=len, reverse=True)
+
+    item, unit, item_method = _extract_item(text, current_item_names_sorted, current_item_unit_map)
     qty, qty_method = _extract_qty(text)
     action, action_method = _extract_action(text)
 

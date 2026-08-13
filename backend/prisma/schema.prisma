@@ -1,0 +1,27 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Stock {
+  id        Int      @id @default(autoincrement())
+  item      String   @unique
+  qty       Int      @default(0)
+  unit      String   @default("pcs")
+  threshold Int      @default(5)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TransactionHistory {
+  id        Int      @id @default(autoincrement())
+  item      String
+  action    String
+  qty       Int
+  unit      String
+  timestamp DateTime @default(now())
+}
