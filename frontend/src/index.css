@@ -1,24 +1,62 @@
 @import "tailwindcss";
 
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 @theme {
-  --color-warung-bg: #F3ECDD;
-  --color-warung-card: #FFFFFF;
-  --color-warung-border: #E8DFCC;
-  --color-warung-text: #3A322C;
-  --color-warung-muted: #8A7F6E;
-  --color-warung-faint: #B0A48F;
-  --color-warung-accent: #D6572B;
-  --color-warung-accentDark: #B23A24;
-  --color-warung-dangerBg: #FBE6E1;
-  --color-warung-dangerText: #B23A24;
-  --color-warung-warningBg: #FBF0DA;
-  --color-warung-warningText: #8A5B0B;
-  --color-warung-avatarBg: #F0DDC4;
-  --color-warung-avatarText: #8A4E1D;
-  --color-warung-successText: #3B6D11;
+  --font-sans: 'Outfit', system-ui, sans-serif;
+
+  /* Fintech AI Colors */
+  --color-ai-bg: #EAF4EE; /* Very pale mint/green */
+  --color-ai-lime: #B4F090; /* Bright Lime Green accent */
+  --color-ai-dark: #1E1E1E; /* Soft black for text/bubbles */
+  --color-ai-gray: #8E9A92; /* Muted text */
+  --color-ai-bubble: #DDF2E4; /* Light green AI bubble */
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-ai-bg);
+  color: var(--color-ai-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Add a subtle radial gradient for that premium glow */
+  background-image: radial-gradient(circle at 50% 0%, #F5FAF6 0%, #EAF4EE 100%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Smooth transitions */
+.interactive {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive:active {
+  transform: scale(0.96);
+}
+
+/* Custom Scrollbar for chat */
+.chat-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
 }

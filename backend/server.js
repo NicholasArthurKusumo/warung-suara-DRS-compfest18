@@ -50,6 +50,10 @@ app.post("/voice-transaction", upload.single("audio"), async (req, res) => {
       contentType: req.file.mimetype || "audio/wav",
     });
 
+    const currentStock = await stockStore.getStock();
+    const customItems = currentStock.map(s => ({ name: s.item, unit: s.unit }));
+    form.append("custom_items", JSON.stringify(customItems));
+
     const fastApiResponse = await axios.post(`${FASTAPI_URL}/transcribe`, form, {
       headers: form.getHeaders(),
       maxContentLength: Infinity,
@@ -61,7 +65,7 @@ app.post("/voice-transaction", upload.single("audio"), async (req, res) => {
 
     let updated;
     try {
-      updated = stockStore.applyTransaction({ item, qty, unit, action });
+      updated = await stockStore.applyTransaction({ item, qty, unit, action });
     } catch (err) {
       return res.status(422).json({
         error: err.message,
@@ -92,10 +96,10 @@ app.post("/voice-transaction", upload.single("audio"), async (req, res) => {
  * Bypass Whisper/FastAPI, terima field hasil ekstraksi langsung sebagai JSON.
  * Body: { item, qty, unit, action }
  */
-app.post("/voice-transaction/manual", (req, res) => {
+app.post("/voice-transaction/manual", async (req, res) => {
   try {
     const { item, qty, unit, action } = req.body;
-    const updated = stockStore.applyTransaction({ item, qty, unit, action });
+    const updated = await stockStore.applyTransaction({ item, qty, unit, action });
     res.json({ extracted: { item, qty, unit, action }, stock: updated });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -106,26 +110,56 @@ app.post("/voice-transaction/manual", (req, res) => {
  * GET /stock
  * Return full current stock state.
  */
-app.get("/stock", (req, res) => {
-  res.json(stockStore.getStock());
+app.get("/stock", async (req, res) => {
+  res.json(await stockStore.getStock());
 });
 
 /**
  * GET /stock/low
  * Return item-item yang qty-nya <= threshold.
  */
-app.get("/stock/low", (req, res) => {
-  res.json(stockStore.getLowStock());
+app.get("/stock/low", async (req, res) => {
+  res.json(await stockStore.getLowStock());
+});
+
+/**
+ * POST /stock/item
+ * Daftarkan barang baru ke database (default qty = 0).
+ */
+app.post("/stock/item", async (req, res) => {
+  try {
+    const { item, unit, threshold } = req.body;
+    const newItem = await stockStore.registerItem(item, unit, threshold);
+    res.json(newItem);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+/**
+ * DELETE /stock/item/:itemName
+ * Menghapus barang dari database.
+ */
+app.delete("/stock/item/:itemName", async (req, res) => {
+  try {
+    const result = await stockStore.deleteItem(req.params.itemName);
+    res.json(result);
+  } catch (err) {
+    if (err.code === 'P2025') { 
+      return res.status(404).json({ error: "Item not found" });
+    }
+    res.status(400).json({ error: err.message });
+  }
 });
 
 /**
  * POST /stock/threshold
  * Body: { item, threshold }
  */
-app.post("/stock/threshold", (req, res) => {
+app.post("/stock/threshold", async (req, res) => {
   try {
     const { item, threshold } = req.body;
-    const updated = stockStore.setThreshold(item, threshold);
+    const updated = await stockStore.setThreshold(item, threshold);
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -136,8 +170,16 @@ app.post("/stock/threshold", (req, res) => {
  * POST /stock/reset
  * Clear seluruh stock state (buat demo).
  */
-app.post("/stock/reset", (req, res) => {
-  res.json(stockStore.resetStock());
+app.post("/stock/reset", async (req, res) => {
+  res.json(await stockStore.resetStock());
+});
+
+/**
+ * GET /transactions
+ * Return transaction history.
+ */
+app.get("/transactions", async (req, res) => {
+  res.json(await stockStore.getTransactionHistory());
 });
 
 app.listen(PORT, () => {

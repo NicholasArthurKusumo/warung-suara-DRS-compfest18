@@ -1,0 +1,19 @@
+﻿node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# Prisma db files
+*.db
+*.db-journal
+
+# AI coding agent config/skills (not part of the project)
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
+
+# Test/scratch audio files
+dummy.wav
+*.wav

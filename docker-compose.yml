@@ -18,9 +18,13 @@ services:
       # Nama service "ml-service" dipakai sebagai hostname di dalam Docker network,
       # bukan localhost, karena tiap service jalan di container terpisah.
       - FASTAPI_URL=http://ml-service:8000
+      - DATABASE_URL=file:/app/data/dev.db
+    volumes:
+      - backend-data:/app/data
     depends_on:
       - ml-service
     restart: unless-stopped
 
 volumes:
   hf_cache:
+  backend-data:

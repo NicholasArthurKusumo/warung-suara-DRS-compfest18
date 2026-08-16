@@ -26,7 +26,7 @@ import numpy as np
 import soundfile as sf
 import librosa
 import torch
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.responses import JSONResponse
 from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
@@ -121,16 +121,32 @@ def load_audio_from_upload(file_bytes: bytes) -> np.ndarray:
 # HELPER: TRANSKRIPSI
 # =============================================================================
 
-def transcribe(audio_array: np.ndarray) -> str:
+def transcribe(audio_array: np.ndarray, custom_items_list: list = None) -> str:
     inputs = processor(audio_array, sampling_rate=TARGET_SAMPLE_RATE, return_tensors="pt")
     input_features = inputs.input_features.to(device)
+
+    generate_kwargs = {
+        "language": LANGUAGE,
+        "task": TASK,
+        "max_new_tokens": 128,
+    }
+
+    if custom_items_list:
+        custom_names = [ci.get("name", "").strip().lower() for ci in custom_items_list if ci.get("name")]
+        if custom_names:
+            sampled_names = custom_names[:5] 
+            prompt_sentence = "laku " + " ".join([f"{name} satu pcs" for name in sampled_names])
+            try:
+                prompt_ids = processor.get_prompt_ids(prompt_sentence)
+                generate_kwargs["prompt_ids"] = torch.tensor(prompt_ids).to(device)
+                logger.info(f"Using prompt for Whisper: '{prompt_sentence}'")
+            except Exception as e:
+                logger.warning(f"Gagal generate prompt_ids: {e}")
 
     with torch.no_grad():
         predicted_ids = model.generate(
             input_features,
-            language=LANGUAGE,
-            task=TASK,
-            max_new_tokens=128,
+            **generate_kwargs
         )
 
     text = processor.batch_decode(predicted_ids, skip_special_tokens=True)[0]
@@ -148,18 +164,13 @@ def health():
 
 
 @app.post("/transcribe")
-async def transcribe_endpoint(audio: UploadFile = File(...)):
+async def transcribe_endpoint(
+    audio: UploadFile = File(...),
+    custom_items: str = Form(None)
+):
     """
     Terima file audio (voice note), kembalikan transkripsi + entri terstruktur.
-
-    Response:
-        {
-          "transcript": "laku indomie lima bungkus",
-          "extraction": {
-            "item": "indomie", "qty": 5, "unit": "bungkus", "action": "keluar",
-            "raw_text": "...", "method": "rule_based", "needs_review": false
-          }
-        }
+    Juga menerima `custom_items` dalam bentuk JSON string.
     """
     if audio.content_type and not audio.content_type.startswith("audio"):
         logger.warning(f"Content-type tidak biasa: {audio.content_type}, tetap dicoba diproses.")
@@ -176,13 +187,26 @@ async def transcribe_endpoint(audio: UploadFile = File(...)):
     if len(audio_array) == 0:
         raise HTTPException(status_code=400, detail="Audio tidak mengandung data suara.")
 
+    import json
+    custom_items_list = None
+    if custom_items:
+        try:
+            custom_items_list = json.loads(custom_items)
+            logger.info(f"Custom items list parsed: {custom_items_list}")
+        except Exception as e:
+            logger.warning(f"Gagal mem-parse custom_items JSON: {e}")
+    else:
+        logger.info("No custom_items received from Express.")
+
     try:
-        transcript = transcribe(audio_array)
+        transcript = transcribe(audio_array, custom_items_list)
     except Exception as e:
         logger.exception("Gagal transkripsi")
         raise HTTPException(status_code=500, detail=f"Gagal transkripsi: {e}")
 
-    extraction_result = extract(transcript)
+    extraction_result = extract(transcript, custom_items=custom_items_list)
+    logger.info(f"Transcript: {transcript}")
+    logger.info(f"Extraction result: {extraction_result}")
 
     return JSONResponse({
         "transcript": transcript,
